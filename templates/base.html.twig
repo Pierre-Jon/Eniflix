@@ -17,8 +17,19 @@
             <ul>
                 <li><a href="{{ path('home') }}">Home</a></li>
                 <li><a href="{{ path('serie_list') }}">Catalogue</a></li>
+                <li><a href="{{ path('serie_create') }}">Nouvelle Série</a></li>
             </ul>
         </nav>
+
+{#        Pour mettre un message d'alerte (fait appel au contoller)#}
+        {% for type, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ type }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endfor %}
+
         {% block body %}{% endblock %}
     </body>
 </html>
