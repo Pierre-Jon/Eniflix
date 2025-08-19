@@ -19,9 +19,11 @@ class SerieType extends AbstractType
         $builder
             ->add('name', TextType::class, [
                 'label' => 'Nom de la série',
-                'required' => true,
+                'required' => false,
             ])
-            ->add('overview', TextAreaType::class)
+            ->add('overview', TextAreaType::class, [
+                'required' => false,
+            ])
             ->add('status', ChoiceType::class, [
                 'choices' => [
                     'En Cours' => 'Returning',

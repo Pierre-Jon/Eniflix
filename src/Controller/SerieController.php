@@ -80,7 +80,7 @@ final class SerieController extends AbstractController
     }
 
     // Formualire - création d'une serie
-    #[Route('/create', name: '_create', requirements: ['id' => '\d+'])]
+    #[Route('/create', name: '_create')]
     public function create(Request $request, EntityManagerInterface $em) : Response{
 
         $serie = new Serie();
@@ -91,7 +91,7 @@ final class SerieController extends AbstractController
         $form->handleRequest($request);
 
         // Est ce que ce form est soumis ?
-        if ($form->isSubmitted()) {
+        if ($form->isSubmitted() && $form->isValid()) {
 //            $serie->setDateCreated(new \DateTime());
             $em->persist($serie);
             $em->flush();
@@ -117,7 +117,7 @@ final class SerieController extends AbstractController
         $form->handleRequest($request);
 
         // Est ce que ce form est soumis ?
-        if ($form->isSubmitted()) {
+        if ($form->isSubmitted() && $form->isValid()) {
             $em->flush();
 
             $this->addFlash('success', 'Une serie a été mis à jour');
@@ -128,6 +128,21 @@ final class SerieController extends AbstractController
         return $this->render('serie/edit.html.twig',[
             'serie_form' => $form
         ]);
+    }
+    #[Route('/delete{id}', name: '_delete', requirements: ['id' => '\d+'])]
+    public function delete(Serie $serie, EntityManagerInterface $em, request $request): Response
+    {
+
+        if ($this->isCsrfTokenValid('delete'.$serie->getId(), $request->get('_token'))) {
+            $em->remove($serie);
+            $em->flush();
+
+            $this->addFlash('success', 'La série a été supprimée');
+        } else {
+            $this->addFlash('success', 'Suppression impossible');
+        }
+
+        return $this->redirectToRoute('serie_list');
     }
 
 }
