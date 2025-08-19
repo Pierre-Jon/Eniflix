@@ -8,9 +8,11 @@ use App\Repository\SerieRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\String\Slugger\SluggerInterface;
 
 #[Route('/serie', name: 'serie')]
 final class SerieController extends AbstractController
@@ -81,7 +83,7 @@ final class SerieController extends AbstractController
 
     // Formualire - création d'une serie
     #[Route('/create', name: '_create')]
-    public function create(Request $request, EntityManagerInterface $em) : Response{
+    public function create(Request $request, EntityManagerInterface $em, SluggerInterface $slugger, ParameterBagInterface $parameterBag) : Response{
 
         $serie = new Serie();
         //Création du formulaire
@@ -92,6 +94,16 @@ final class SerieController extends AbstractController
 
         // Est ce que ce form est soumis ?
         if ($form->isSubmitted() && $form->isValid()) {
+
+//            dd($form->get('poster_file')->getData());
+            $file = $form->get('poster_file')->getData();
+            if ($file instanceof UploadedFile) {
+                $name = $slugger->slug($serie->getName()) . '-' . uniqid() . '.' . $file->guessExtension();
+                $dir = $parameterBag->get('serie')['poster_directory'];
+                $file->move($dir, $name);
+                $serie->setPoster($name);
+            }
+
 //            $serie->setDateCreated(new \DateTime());
             $em->persist($serie);
             $em->flush();
@@ -108,7 +120,7 @@ final class SerieController extends AbstractController
 
     // Formualire - mise à jour d'une serie
     #[Route('/update{id}', name: '_update', requirements: ['id' => '\d+'])]
-    public function update(Serie $serie, Request $request, EntityManagerInterface $em) : Response{
+    public function update(Serie $serie, Request $request, EntityManagerInterface $em, SluggerInterface $slugger, ParameterBagInterface $parameterBag) : Response{
 
         //Création du formulaire
         $form = $this->createForm(SerieType::class, $serie);
@@ -118,6 +130,19 @@ final class SerieController extends AbstractController
 
         // Est ce que ce form est soumis ?
         if ($form->isSubmitted() && $form->isValid()) {
+
+            $file = $form->get('poster_file')->getData();
+            if ($file instanceof UploadedFile) {
+                $name = $slugger->slug($serie->getName()) . '-' . uniqid() . '.' . $file->guessExtension();
+                $dir = $parameterBag->get('serie')['poster_directory'];
+                $file->move($dir, $name);
+                if ($serie->getPoster() && file_exists($dir . '/' . $serie->getPoster())) {
+                    unlink($dir . '/' . $serie->getPoster());
+                }
+                $serie->setPoster($name);
+            }
+
+
             $em->flush();
 
             $this->addFlash('success', 'Une serie a été mis à jour');
@@ -133,13 +158,13 @@ final class SerieController extends AbstractController
     public function delete(Serie $serie, EntityManagerInterface $em, request $request): Response
     {
 
-        if ($this->isCsrfTokenValid('delete'.$serie->getId(), $request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete'.$serie->getId(), $request->get('token'))) {
             $em->remove($serie);
             $em->flush();
 
             $this->addFlash('success', 'La série a été supprimée');
         } else {
-            $this->addFlash('success', 'Suppression impossible');
+            $this->addFlash('danger', 'Suppression impossible');
         }
 
         return $this->redirectToRoute('serie_list');

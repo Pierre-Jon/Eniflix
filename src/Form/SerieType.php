@@ -6,11 +6,13 @@ use App\Entity\Serie;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
+use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\File;
 
 class SerieType extends AbstractType
 {
@@ -26,9 +28,9 @@ class SerieType extends AbstractType
             ])
             ->add('status', ChoiceType::class, [
                 'choices' => [
-                    'En Cours' => 'Returning',
-                    'Terminé' => 'Ended',
-                    'Abandonné' => 'Canceled'
+                    'En Cours' => 'returning',
+                    'Terminé' => 'ended',
+                    'Abandonné' => 'canceled'
                 ],
                 'placeholder' => '-- Choisissez un statut --',
     ])
@@ -43,7 +45,22 @@ class SerieType extends AbstractType
                 'required' => false,
             ])
             ->add('backdrop')
-            ->add('poster')
+            ->add('poster_file', FileType::class, [
+                'required' => false,
+                'mapped' => false,
+                'constraints' => [
+                    new File([
+                        'maxSize' => '1024k',
+                        'maxSizeMessage' => 'Votre fichier est trop lourd !',
+                        'mimeTypes' => [
+                            'image/jpeg',
+                            'image/jpg',
+                            'image/png'
+                        ],
+                        'mimeTypesMessage' => 'Les formats acceptés sont jpeg, jpg ou png',
+                    ])
+                ]
+            ])
             ->add('submit', SubmitType::class)
 //            ->add('tmdbId')
 //            ->add('dateCreated')
