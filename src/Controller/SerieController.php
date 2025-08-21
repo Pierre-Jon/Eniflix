@@ -12,9 +12,11 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\String\Slugger\SluggerInterface;
 
 #[Route('/serie', name: 'serie')]
+#[IsGranted('ROLE_USER')]
 final class SerieController extends AbstractController
 {
 
@@ -86,6 +88,7 @@ final class SerieController extends AbstractController
 
     // Formualire - création d'une serie
     #[Route('/create', name: '_create')]
+    #[IsGranted('ROLE_ADMIN')]
     public function create(Request $request, EntityManagerInterface $em, SluggerInterface $slugger, ParameterBagInterface $parameterBag) : Response{
 
         $serie = new Serie();
@@ -123,6 +126,7 @@ final class SerieController extends AbstractController
 
     // Formualire - mise à jour d'une serie
     #[Route('/update{id}', name: '_update', requirements: ['id' => '\d+'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function update(Serie $serie, Request $request, EntityManagerInterface $em, SluggerInterface $slugger, ParameterBagInterface $parameterBag) : Response{
 
         //Création du formulaire
@@ -158,6 +162,7 @@ final class SerieController extends AbstractController
         ]);
     }
     #[Route('/delete{id}', name: '_delete', requirements: ['id' => '\d+'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function delete(Serie $serie, EntityManagerInterface $em, request $request): Response
     {
 
